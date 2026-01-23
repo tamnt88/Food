@@ -447,29 +447,9 @@
                      <div class="mt-shop-widget mb-50">
                         <h3 class="mt-shop-widget-title mb-20">Shop By Categories</h3>
                         <div class="mt-shop-widget-content">
-                           <div class="mt-shop-widget-categories">
-                              <ul>
-                                 <li><a href="shop.html"><img src="assets/img/category/cat-menu-1-1.png" alt="">Fresh
-                                       Produce
-                                       <span><i class="fa-light fa-angle-right"></i></span></a></li>
-                                 <li><a href="shop.html"><img src="assets/img/category/cat-menu-1-2.png" alt="">Dairy &
-                                       Eggs
-                                       <span><i class="fa-light fa-angle-right"></i></span></a></li>
-                                 <li><a href="shop.html"><img src="assets/img/category/cat-menu-1-3.png" alt="">Meat &
-                                       Seafood<span><i class="fa-light fa-angle-right"></i></span></a></li>
-                                 <li><a href="shop.html"><img src="assets/img/category/cat-menu-1-4.png" alt="">Bakery &
-                                       Bread
-                                       <span><i class="fa-light fa-angle-right"></i></span></a></li>
-                                 <li><a href="shop.html"><img src="assets/img/category/cat-menu-1-5.png" alt="">Pantry
-                                       Staples
-                                       <span><i class="fa-light fa-angle-right"></i></span></a></li>
-                                 <li><a href="shop.html"><img src="assets/img/category/cat-menu-1-6.png" alt="">Frozen
-                                       Foods
-                                       <span><i class="fa-light fa-angle-right"></i></span></a></li>
-                                 <li><a href="shop.html"><img src="assets/img/category/cat-menu-1-7.png"
-                                          alt="">Beverages
-                                       <span><i class="fa-light fa-angle-right"></i></span></a></li>
-                              </ul>
+                           <div class="mt-shop-widget-categories shop-cascading-menu">
+                              <div class="shop-accordion" data-shop-accordion></div>
+                              <noscript class="shop-cascading-noscript">Enable JavaScript to explore the full category tree.</noscript>
                            </div>
                         </div>
                      </div>
@@ -1865,6 +1845,231 @@
 
 
    <!-- JS here -->
+   <script>
+      document.addEventListener('DOMContentLoaded', function () {
+         const root = document.querySelector('[data-shop-accordion]');
+         if (!root) {
+            return;
+         }
+
+         const iconPaths = [
+            'assets/img/category/cat-menu-1-1.png',
+            'assets/img/category/cat-menu-1-2.png',
+            'assets/img/category/cat-menu-1-3.png',
+            'assets/img/category/cat-menu-1-4.png',
+            'assets/img/category/cat-menu-1-5.png',
+            'assets/img/category/cat-menu-1-6.png',
+            'assets/img/category/cat-menu-1-7.png',
+            'assets/img/category/cat-menu-1-8.png'
+         ];
+
+         const pad = (value) => value.toString().padStart(2, '0');
+
+         const categories = Array.from({ length: 20 }, (_, parentIndex) => {
+            const parentLabel = 'Industrial Category ' + pad(parentIndex + 1);
+            return {
+               label: parentLabel,
+               icon: iconPaths[parentIndex % iconPaths.length],
+               children: Array.from({ length: 20 }, (_, childIndex) => {
+                  const childLabel = 'Series ' + pad(parentIndex + 1) + '.' + pad(childIndex + 1);
+                  return {
+                     label: childLabel,
+                     items: Array.from({ length: 20 }, (_, itemIndex) => ({
+                        label: 'Model ' + pad(parentIndex + 1) + '.' + pad(childIndex + 1) + '.' + pad(itemIndex + 1),
+                        href: 'shop.html'
+                     }))
+                  };
+               })
+            };
+         });
+
+         const list = document.createElement('ul');
+         list.className = 'shop-accordion-list';
+
+         categories.forEach((category) => {
+            const item = document.createElement('li');
+            item.className = 'shop-accordion-item';
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'shop-accordion-toggle';
+            button.setAttribute('aria-expanded', 'false');
+            button.innerHTML = '' +
+               '<span class="shop-accordion-left">' +
+               '<span class="shop-accordion-icon"><img src="' + category.icon + '" alt=""></span>' +
+               '<span class="shop-accordion-label">' + category.label + '</span>' +
+               '</span>' +
+               '<span class="shop-accordion-caret"><i class="fa-light fa-angle-down"></i></span>';
+            item.appendChild(button);
+
+            const panel = document.createElement('div');
+            panel.className = 'shop-accordion-panel';
+            panel.setAttribute('aria-hidden', 'true');
+
+            const subList = document.createElement('ul');
+            subList.className = 'shop-subcategory-list';
+
+            category.children.forEach((child) => {
+               const subItem = document.createElement('li');
+               subItem.className = 'shop-subcategory-item';
+
+               const childButton = document.createElement('button');
+               childButton.type = 'button';
+               childButton.className = 'shop-subcategory-toggle';
+               childButton.setAttribute('aria-expanded', 'false');
+               childButton.innerHTML = '' +
+                  '<span class="shop-subcategory-label">' + child.label + '</span>' +
+                  '<span class="shop-subcategory-caret"><i class="fa-light fa-angle-down"></i></span>';
+               subItem.appendChild(childButton);
+
+               const tertiaryPanel = document.createElement('div');
+               tertiaryPanel.className = 'shop-tertiary-panel';
+               tertiaryPanel.setAttribute('aria-hidden', 'true');
+
+               const tertiaryList = document.createElement('ul');
+               tertiaryList.className = 'shop-tertiary-list';
+
+               child.items.forEach((itemNode) => {
+                  const tertiaryItem = document.createElement('li');
+                  const link = document.createElement('a');
+                  link.href = itemNode.href;
+                  link.className = 'shop-tertiary-link';
+                  link.innerHTML = '<span class="shop-tertiary-marker"><i class="fa-light fa-angle-right"></i></span>' + itemNode.label;
+                  tertiaryItem.appendChild(link);
+                  tertiaryList.appendChild(tertiaryItem);
+               });
+
+               tertiaryPanel.appendChild(tertiaryList);
+               subItem.appendChild(tertiaryPanel);
+               subList.appendChild(subItem);
+            });
+
+            panel.appendChild(subList);
+            item.appendChild(panel);
+            list.appendChild(item);
+         });
+
+         root.appendChild(list);
+
+         const closeSubItem = (subItem) => {
+            if (!subItem) {
+               return;
+            }
+            subItem.classList.remove('is-open');
+            const subButton = subItem.querySelector(':scope > .shop-subcategory-toggle');
+            const tertiaryPanel = subItem.querySelector(':scope > .shop-tertiary-panel');
+            if (subButton) {
+               subButton.setAttribute('aria-expanded', 'false');
+            }
+            if (tertiaryPanel) {
+               tertiaryPanel.setAttribute('aria-hidden', 'true');
+               tertiaryPanel.style.maxHeight = '0px';
+            }
+         };
+
+         const closeParentItem = (item) => {
+            if (!item) {
+               return;
+            }
+            item.classList.remove('is-open');
+            const parentButton = item.querySelector(':scope > .shop-accordion-toggle');
+            const panel = item.querySelector(':scope > .shop-accordion-panel');
+            if (parentButton) {
+               parentButton.setAttribute('aria-expanded', 'false');
+            }
+            if (panel) {
+               panel.setAttribute('aria-hidden', 'true');
+               panel.style.maxHeight = '0px';
+            }
+            item.querySelectorAll('.shop-subcategory-item').forEach((subItem) => {
+               closeSubItem(subItem);
+            });
+         };
+
+         const closeSiblings = (element, selector, closeFn) => {
+            if (!element || !element.parentElement) {
+               return;
+            }
+            element.parentElement.querySelectorAll(selector).forEach((sibling) => {
+               if (sibling !== element) {
+                  closeFn(sibling);
+               }
+            });
+         };
+
+         const refreshOpenPanels = () => {
+            root.querySelectorAll('.shop-accordion-item.is-open > .shop-accordion-panel').forEach((panel) => {
+               panel.style.maxHeight = panel.scrollHeight + 'px';
+            });
+            root.querySelectorAll('.shop-subcategory-item.is-open > .shop-tertiary-panel').forEach((panel) => {
+               panel.style.maxHeight = panel.scrollHeight + 'px';
+            });
+         };
+
+         root.querySelectorAll('.shop-accordion-toggle').forEach((button) => {
+            button.addEventListener('click', () => {
+               const item = button.closest('.shop-accordion-item');
+               if (!item) {
+                  return;
+               }
+               const expanded = button.getAttribute('aria-expanded') === 'true';
+               if (expanded) {
+                  closeParentItem(item);
+               } else {
+                  closeSiblings(item, '.shop-accordion-item', closeParentItem);
+                  item.classList.add('is-open');
+                  button.setAttribute('aria-expanded', 'true');
+                  const panel = item.querySelector(':scope > .shop-accordion-panel');
+                  if (panel) {
+                     panel.setAttribute('aria-hidden', 'false');
+                     panel.style.maxHeight = panel.scrollHeight + 'px';
+                  }
+               }
+               refreshOpenPanels();
+            });
+         });
+
+         root.querySelectorAll('.shop-subcategory-toggle').forEach((button) => {
+            button.addEventListener('click', () => {
+               const subItem = button.closest('.shop-subcategory-item');
+               if (!subItem) {
+                  return;
+               }
+               const expanded = button.getAttribute('aria-expanded') === 'true';
+               if (expanded) {
+                  closeSubItem(subItem);
+               } else {
+                  closeSiblings(subItem, '.shop-subcategory-item', closeSubItem);
+                  subItem.classList.add('is-open');
+                  button.setAttribute('aria-expanded', 'true');
+                  const panel = subItem.querySelector(':scope > .shop-tertiary-panel');
+                  if (panel) {
+                     panel.setAttribute('aria-hidden', 'false');
+                     panel.style.maxHeight = panel.scrollHeight + 'px';
+                  }
+               }
+               refreshOpenPanels();
+            });
+         });
+
+         const firstParent = root.querySelector('.shop-accordion-item > .shop-accordion-toggle');
+         if (firstParent) {
+            firstParent.click();
+            const firstSub = root.querySelector('.shop-accordion-item.is-open .shop-subcategory-toggle');
+            if (firstSub) {
+               firstSub.click();
+            }
+         }
+
+         let resizeTimer;
+         window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(refreshOpenPanels, 150);
+         });
+
+         requestAnimationFrame(refreshOpenPanels);
+      });
+   </script>
    <script data-cfasync="false" src="../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="assets/js/jquery-min.js"></script>
    <script src="assets/js/bootstrap.min.js"></script>
    <script src="assets/js/nice-select.js"></script>
